@@ -18,16 +18,15 @@ for col in df.columns:
     Temperatures = Data.iloc[:, 63:68].astype(float)
 # Rename some of the data for easy access
 Data.rename(columns = {29:'Pack Voltage', 9:'boardTemperature', 10:'boardSupplyVoltage', 11:'odometerKm', 12:'tripKm', 13:'speedKmh',
-                       14:'maximumSpeed',  16: 'efficiency', 17:'vehicleStatuByte1', 18:'vehicleStatuByte2'}, inplace = True)
-
-
+                       14:'maximumSpeed',  16: 'efficiency', 17:'vehicleStatuByte1', 18:'vehicleStatuByte2', 69:'SOC', 62:'Pack_DSG_Current',
+                       85:'Invt_Temp', 83:'RPM', 81:'MCU_Voltage', 84:'Motor_Temp'}, inplace = True)
 
 # Initialize the Dash app
 app = dash.Dash(__name__)
 
 # Define the layout
 app.layout = html.Div([
-    html.H1("DataFrame Column Plotter"),
+    html.H1("Evoke Motorcylces Data visualization"),
     dcc.Dropdown(
         id='column-dropdown',
         options=[{'label': col, 'value': col} for col in Data.columns],
