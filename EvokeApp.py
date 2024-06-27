@@ -10,13 +10,13 @@ df = pd.read_csv('Balistron1.txt')
 # Iterate through each column
 for col in df.columns:
     Data =df[col].str.split(';', expand=True)
-# All the 28 Strings voltages
-for col in df.columns:
-    Strings = ((Data.iloc[:, 30:57].astype(float))+200)/100
-# All 6 temp probe and the max, min temp 
-for col in df.columns:
-    Temperatures = Data.iloc[:, 63:68].astype(float)
-# Rename some of the data for easy access
+# Remove the first colunm which has time and date
+Data =Data.iloc[:, 1:]
+def to_float(x):
+    return float(x) if x != '' else np.nan
+# Apply the conversion function to the entire DataFrame
+Data = Data.map(to_float)
+
 Data.rename(columns = {29:'Pack Voltage', 9:'boardTemperature', 10:'boardSupplyVoltage', 11:'odometerKm', 12:'tripKm', 13:'speedKmh',
                        14:'maximumSpeed',  16: 'efficiency', 17:'vehicleStatuByte1', 18:'vehicleStatuByte2', 69:'SOC', 62:'Pack_DSG_Current',
                        85:'Invt_Temp', 83:'RPM', 81:'MCU_Voltage', 84:'Motor_Temp'}, inplace = True)
