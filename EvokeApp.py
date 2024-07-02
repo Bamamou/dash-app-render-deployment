@@ -16,6 +16,14 @@ def to_float(x):
     return float(x) if x != '' else np.nan
 # Apply the conversion function to the entire DataFrame
 Data = Data.map(to_float)
+# Let's compute the voltage of each Cell an convert it to V
+for col in Data.iloc[:, 29:56]:
+    Data[col] =(Data[col]+200)/100
+    Data.rename(columns={col:'String'+str(col-29)}, inplace = True)
+# Let's also rename the temperature columns
+for col in Data.iloc[:, 62:67]:
+    Data.rename(columns={col:'Temperature'+str(col-62)}, inplace = True)
+
 
 Data.rename(columns = {29:'Pack Voltage', 9:'boardTemperature', 10:'boardSupplyVoltage', 11:'odometerKm', 12:'tripKm', 13:'speedKmh',
                        14:'maximumSpeed',  16: 'efficiency', 17:'vehicleStatuByte1', 18:'vehicleStatuByte2', 69:'SOC', 62:'Pack_DSG_Current',
