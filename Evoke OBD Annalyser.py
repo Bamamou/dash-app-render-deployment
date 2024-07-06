@@ -1,6 +1,5 @@
 import dash
-from dash import html, dcc
-from dash import html, dcc, callback, Output, Input, State
+from dash import html, dcc, Input, Output, State
 import pandas as pd
 import numpy as np
 import base64
@@ -12,14 +11,14 @@ app = dash.Dash(__name__)
 
 # Define the app layout
 app.layout = html.Div([
-    html.H1("Upload and Plot Text File"),
+    html.H1("Evoke Motorcycles OBD vizualizer"),
     dcc.Upload(
         id="upload-data",
         children=html.Button("Upload File"),
         multiple=False
     ),
     html.Div(id="output-data-upload"),
-    dcc.Dropdown(id="column-dropdown"),
+    dcc.Dropdown(id="column-dropdown", multi=True),  # Allow multiple selections
     dcc.Graph(id="plot")
 ])
 
@@ -37,7 +36,6 @@ def upload_file(contents, filename):
         # Read the uploaded file
         content_type, content_string = contents.split(",")
         decoded = base64.b64decode(content_string)
-        global df
         df = pd.read_csv(io.StringIO(decoded.decode("utf-8")))
         for col in df.columns:
             df =df[col].str.split(';', expand=True)
@@ -47,13 +45,17 @@ def upload_file(contents, filename):
             return float(x) if x != '' else np.nan
             # Apply the conversion function to the entire DataFrame
         df = df.map(to_float)
-        # Let's compute the voltage of each Cell an convert it to V then give them a string number
+        # Let's compute the voltage of each Cell an convert it to V
         for col in df.iloc[:, 29:56]:
             df[col] =(df[col]+200)/100
             df.rename(columns={col:'String'+str(col-29)}, inplace = True)
         # Let's also rename the temperature columns
         for col in df.iloc[:, 62:67]:
             df.rename(columns={col:'Temperature'+str(col-62)}, inplace = True)
+        # divide the below values by 10
+        df[29] =df[29].div(10)   # BMS pack voltgae 
+        df[81] =df[81].div(10)   #MCU pack voltage
+        df[10] =df[10].div(10)   #ECU supply voltage
         df.rename(columns = {29:'Pack Voltage', 9:'boardTemperature', 10:'boardSupplyVoltage', 11:'odometerKm', 12:'tripKm', 13:'speedKmh',
                        14:'maximumSpeed',  16: 'efficiency', 17:'vehicleStatuByte1', 18:'vehicleStatuByte2', 69:'SOC', 62:'Pack_DSG_Current',
                        85:'Invt_Temp', 83:'RPM', 81:'MCU_Voltage', 84:'Motor_Temp'}, inplace = True)
@@ -66,12 +68,41 @@ def upload_file(contents, filename):
 # Define callback to handle plot
 @app.callback(
     Output("plot", "figure"),
-    [Input("column-dropdown", "value")]
+    [Input("column-dropdown", "value")],
+    [State("upload-data", "contents")]
 )
-def plot_selected_column(selected_column):
-    if selected_column:
-        # Plot the selected column
-        fig = px.line(df, x=df.index, y=selected_column, title=f"Plot of {selected_column}")
+def plot_selected_columns(selected_columns, contents):
+    if selected_columns and contents:
+        # Read the uploaded file
+        content_type, content_string = contents.split(",")
+        decoded = base64.b64decode(content_string)
+        df = pd.read_csv(io.StringIO(decoded.decode("utf-8")))
+        for col in df.columns:
+            df =df[col].str.split(';', expand=True)
+                # Remove the first colunm which has time and date
+            df =df.iloc[:, 1:]
+        def to_float(x):
+            return float(x) if x != '' else np.nan
+            # Apply the conversion function to the entire DataFrame
+        df = df.map(to_float)
+        # Let's compute the voltage of each Cell an convert it to V
+        for col in df.iloc[:, 29:56]:
+            df[col] =(df[col]+200)/100
+            df.rename(columns={col:'String'+str(col-29)}, inplace = True)
+        # Let's also rename the temperature columns
+        for col in df.iloc[:, 62:67]:
+            df.rename(columns={col:'Temperature'+str(col-62)}, inplace = True)
+        #Divide the pack voltage per 10   
+        df[29] =df[29].div(10)   # BMS pack voltgae 
+        df[81] =df[81].div(10)   #MCU pack voltage
+        df[10] =df[10].div(10)   #ECU supply voltage
+        #Rename some columns
+        df.rename(columns = {29:'Pack Voltage', 9:'boardTemperature', 10:'boardSupplyVoltage', 11:'odometerKm', 12:'tripKm', 13:'speedKmh',
+                       14:'maximumSpeed',  16: 'efficiency', 17:'vehicleStatuByte1', 18:'vehicleStatuByte2', 69:'SOC', 62:'Pack_DSG_Current',
+                       85:'Invt_Temp', 83:'RPM', 81:'MCU_Voltage', 84:'Motor_Temp'}, inplace = True)
+
+        # Plot the selected columns
+        fig = px.line(df, x=df.index, y=selected_columns, title="Plot of Selected Data")
         return fig
     else:
         return {}
