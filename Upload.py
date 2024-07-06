@@ -12,7 +12,7 @@ app = dash.Dash(__name__)
 
 # Define the app layout
 app.layout = html.Div([
-    html.H1("Upload and Plot Text File"),
+    html.H1("Evoke Motorcycles OBD vizualizer"),
     dcc.Upload(
         id="upload-data",
         children=html.Button("Upload File"),
@@ -51,6 +51,8 @@ def upload_file(contents, filename):
             df[col] =(df[col]+200)/100
             df.rename(columns={col:'String'+str(col-29)}, inplace = True)
         # Let's also rename the temperature columns
+        # for col in df.iloc[:, 29]:
+        #     df[col] =(df[col])/10
         for col in df.iloc[:, 62:67]:
             df.rename(columns={col:'Temperature'+str(col-62)}, inplace = True)
         df.rename(columns = {29:'Pack Voltage', 9:'boardTemperature', 10:'boardSupplyVoltage', 11:'odometerKm', 12:'tripKm', 13:'speedKmh',

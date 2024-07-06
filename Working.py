@@ -47,7 +47,7 @@ def upload_file(contents, filename):
             return float(x) if x != '' else np.nan
             # Apply the conversion function to the entire DataFrame
         df = df.map(to_float)
-        # Let's compute the voltage of each Cell an convert it to V
+        # Let's compute the voltage of each Cell an convert it to V then give them a string number
         for col in df.iloc[:, 29:56]:
             df[col] =(df[col]+200)/100
             df.rename(columns={col:'String'+str(col-29)}, inplace = True)
